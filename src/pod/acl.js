@@ -1,6 +1,9 @@
 import {
   getFileWithAcl,
   getResourceAcl,
+  hasResourceAcl,
+  hasFallbackAcl,
+  createAclFromFallbackAcl,
   saveAclFor,
 } from '@inrupt/solid-client/acl/acl'
 import { setPublicResourceAccess } from '@inrupt/solid-client/acl/class'
@@ -11,17 +14,32 @@ function getSessionFetch() {
 }
 
 /**
+ * Resolve the ACL to modify for a resource.
+ * New files have no resource ACL yet — they only inherit from the container.
+ * In that case, createAclFromFallbackAcl clones the inherited ACL into a
+ * resource-specific one that we can then save.
+ */
+function resolveAcl(fileWithAcl) {
+  if (hasResourceAcl(fileWithAcl)) {
+    return getResourceAcl(fileWithAcl)
+  }
+  if (hasFallbackAcl(fileWithAcl)) {
+    return createAclFromFallbackAcl(fileWithAcl)
+  }
+  throw new Error(
+    'No ACL found for this resource. Make sure your Pod supports WAC ' +
+    '(Web Access Control) and that you have Control access.'
+  )
+}
+
+/**
  * Grant public (unauthenticated) read access to a note via WAC ACL.
  * Returns the note URL so callers can build shareable links.
  */
 export async function makeNotePublic(noteUrl) {
   const fetch = getSessionFetch()
   const fileWithAcl = await getFileWithAcl(noteUrl, { fetch })
-  const resourceAcl = getResourceAcl(fileWithAcl)
-  if (!resourceAcl) {
-    throw new Error(`No resource ACL found for ${noteUrl}. Ensure the Pod supports WAC.`)
-  }
-  const updatedAcl = setPublicResourceAccess(resourceAcl, { read: true })
+  const updatedAcl = setPublicResourceAccess(resolveAcl(fileWithAcl), { read: true })
   await saveAclFor(fileWithAcl, updatedAcl, { fetch })
   return noteUrl
 }
@@ -32,11 +50,7 @@ export async function makeNotePublic(noteUrl) {
 export async function revokeNotePublic(noteUrl) {
   const fetch = getSessionFetch()
   const fileWithAcl = await getFileWithAcl(noteUrl, { fetch })
-  const resourceAcl = getResourceAcl(fileWithAcl)
-  if (!resourceAcl) {
-    throw new Error(`No resource ACL found for ${noteUrl}. Ensure the Pod supports WAC.`)
-  }
-  const updatedAcl = setPublicResourceAccess(resourceAcl, { read: false })
+  const updatedAcl = setPublicResourceAccess(resolveAcl(fileWithAcl), { read: false })
   await saveAclFor(fileWithAcl, updatedAcl, { fetch })
 }
 

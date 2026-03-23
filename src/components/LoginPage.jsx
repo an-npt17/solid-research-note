@@ -7,15 +7,36 @@ const PROVIDERS = [
   { label: 'inrupt.net', url: 'https://inrupt.net' },
 ]
 
+/**
+ * OIDC issuer must be the server root, not a Pod URL.
+ * e.g. "http://localhost:3000/alice/" → "http://localhost:3000"
+ */
+function toIssuerRoot(raw) {
+  try {
+    const u = new URL(raw.trim())
+    return `${u.protocol}//${u.host}`
+  } catch {
+    return raw.trim()
+  }
+}
+
 export default function LoginPage() {
   const [provider, setProvider] = useState(PROVIDERS[0].url)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
   async function handleLogin(e) {
     e.preventDefault()
+    setError(null)
     setLoading(true)
-    await loginWithProvider(provider)
-    // Browser will redirect — no need to setLoading(false)
+    const issuer = toIssuerRoot(provider)
+    try {
+      await loginWithProvider(issuer)
+      // Browser will redirect — no need to setLoading(false)
+    } catch (err) {
+      setError(`Could not reach provider: ${err.message}`)
+      setLoading(false)
+    }
   }
 
   return (
@@ -49,7 +70,8 @@ export default function LoginPage() {
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Pod Provider
+              Identity Provider{' '}
+              <span className="font-normal text-slate-400">(server root, not your Pod URL)</span>
             </label>
             <div className="flex flex-wrap gap-2 mb-2">
               {PROVIDERS.map((p) => (
@@ -75,7 +97,19 @@ export default function LoginPage() {
               placeholder="https://solidcommunity.net"
               required
             />
+            {provider && toIssuerRoot(provider) !== provider.trim() && (
+              <p className="mt-1 text-xs text-amber-600">
+                Will use server root: <strong>{toIssuerRoot(provider)}</strong>
+              </p>
+            )}
           </div>
+
+          {error && (
+            <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              {error}
+            </p>
+          )}
+
           <button
             type="submit"
             disabled={loading}

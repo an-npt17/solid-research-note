@@ -7,12 +7,16 @@ export default function NoteViewer({ noteUrl, title, content, onClose, onEdit })
   const [shareUrl, setShareUrl] = useState(null)
   const [sharing, setSharing] = useState(false)
   const [revoking, setRevoking] = useState(false)
+  const [aclError, setAclError] = useState(null)
 
   async function handleMakePublic() {
     setSharing(true)
+    setAclError(null)
     try {
       await makeNotePublic(noteUrl)
       setShareUrl(getShareableUrl(noteUrl))
+    } catch (err) {
+      setAclError(err.message)
     } finally {
       setSharing(false)
     }
@@ -20,9 +24,12 @@ export default function NoteViewer({ noteUrl, title, content, onClose, onEdit })
 
   async function handleRevoke() {
     setRevoking(true)
+    setAclError(null)
     try {
       await revokeNotePublic(noteUrl)
       setShareUrl(null)
+    } catch (err) {
+      setAclError(err.message)
     } finally {
       setRevoking(false)
     }
@@ -47,6 +54,13 @@ export default function NoteViewer({ noteUrl, title, content, onClose, onEdit })
           <div className="px-6 py-4 overflow-y-auto flex-1 prose prose-slate max-w-none">
             <ReactMarkdown>{content}</ReactMarkdown>
           </div>
+
+          {/* ACL error */}
+          {aclError && (
+            <div className="px-6 py-2 text-xs text-red-600 bg-red-50 border-t border-red-100">
+              Share failed: {aclError}
+            </div>
+          )}
 
           {/* Actions */}
           <div className="px-6 py-4 border-t border-slate-100 flex gap-3 flex-shrink-0">

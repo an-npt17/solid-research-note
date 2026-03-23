@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  server: {
+    allowedHosts: ['.ts.net'],
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/__tests__/setup.js'],

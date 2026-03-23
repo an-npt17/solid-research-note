@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
       target: development
     ports:
-      - "5173:5173"
+      - "5001:5173"
     volumes:
       - .:/app
       # keep the container's node_modules intact even with the bind mount above
@@ -13,7 +13,8 @@ services:
     environment:
       - NODE_ENV=development
     depends_on:
-      - css
+      css:
+        condition: service_healthy
 
   # Community Solid Server — local Pod provider for demo/development
   # Register a new account at http://localhost:3000/.account/login/password/register/
@@ -27,6 +28,17 @@ services:
       - "--showStackTrace"
     volumes:
       - css-data:/data
+    healthcheck:
+      # CSS exposes its OIDC discovery doc once the server is fully ready
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q --spider http://localhost:3000/.well-known/openid-configuration || exit 1",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
 
 volumes:
   css-data:
