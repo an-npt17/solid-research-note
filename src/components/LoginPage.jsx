@@ -1,10 +1,14 @@
 import React, { useState } from 'react'
 import { loginWithProvider } from '../auth/session.js'
 
-const DEFAULT_PROVIDER = 'https://solidcommunity.net'
+const PROVIDERS = [
+  { label: 'solidcommunity.net (free, public)', url: 'https://solidcommunity.net' },
+  { label: 'Local demo server (docker compose)', url: 'http://localhost:3000' },
+  { label: 'inrupt.net', url: 'https://inrupt.net' },
+]
 
 export default function LoginPage() {
-  const [provider, setProvider] = useState(DEFAULT_PROVIDER)
+  const [provider, setProvider] = useState(PROVIDERS[0].url)
   const [loading, setLoading] = useState(false)
 
   async function handleLogin(e) {
@@ -30,23 +34,39 @@ export default function LoginPage() {
           >
             Solid Pod
           </a>
-          . New? Create a free account at{' '}
+          . New to Solid?{' '}
           <a
             href="https://solidcommunity.net/register"
             target="_blank"
             rel="noreferrer"
             className="text-indigo-600 underline"
           >
-            solidcommunity.net
-          </a>
-          .
+            Register at solidcommunity.net
+          </a>{' '}
+          or run the local demo server below.
         </p>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Pod Provider URL
+              Pod Provider
             </label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {PROVIDERS.map((p) => (
+                <button
+                  key={p.url}
+                  type="button"
+                  onClick={() => setProvider(p.url)}
+                  className={`text-xs px-2 py-1 rounded-full border transition ${
+                    provider === p.url
+                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      : 'text-slate-600 border-slate-300 hover:border-indigo-400'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
             <input
               type="url"
               value={provider}

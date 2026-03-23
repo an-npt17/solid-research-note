@@ -1,0 +1,32 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      # keep the container's node_modules intact even with the bind mount above
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - css
+
+  # Community Solid Server — local Pod provider for demo/development
+  # Register a new account at http://localhost:3000/.account/login/password/register/
+  css:
+    image: solidproject/community-server:latest
+    ports:
+      - "3000:3000"
+    command:
+      - "--port=3000"
+      - "--config=@css:config/default.json"
+      - "--showStackTrace"
+    volumes:
+      - css-data:/data
+
+volumes:
+  css-data:

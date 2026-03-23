@@ -21,7 +21,7 @@ export async function initSession() {
 export async function loginWithProvider(oidcIssuer) {
   await login({
     oidcIssuer,
-    redirectUrl: window.location.href,
+    redirectUrl: window.location.origin + window.location.pathname,
     clientName: 'Solid Research Notes',
   })
 }
@@ -46,6 +46,6 @@ export function isLoggedIn() {
  */
 export function onSessionChange(callback) {
   const session = getDefaultSession()
-  session.on('login', callback)
-  session.on('logout', callback)
+  session.events.on('login', callback)
+  session.events.on('logout', callback)
 }

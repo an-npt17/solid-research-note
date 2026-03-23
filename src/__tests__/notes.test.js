@@ -1,14 +1,16 @@
 import { describe, it, expect, vi } from 'vitest'
 import { getContainerUrl, slugify } from '../pod/notes.js'
 
-// Mock @inrupt/solid-client so tests don't need a real Pod
-vi.mock('@inrupt/solid-client', () => ({
+// Mock subpath imports used by notes.js
+vi.mock('@inrupt/solid-client/resource/solidDataset', () => ({
   getSolidDataset: vi.fn(async () => ({})),
   getContainedResourceUrlAll: vi.fn(() => []),
+  createContainerAt: vi.fn(async () => {}),
+}))
+vi.mock('@inrupt/solid-client/resource/file', () => ({
   getFile: vi.fn(async () => new Blob([''])),
   overwriteFile: vi.fn(async () => {}),
   deleteFile: vi.fn(async () => {}),
-  createContainerAt: vi.fn(async () => {}),
 }))
 
 vi.mock('@inrupt/solid-client-authn-browser', () => ({
@@ -28,7 +30,7 @@ describe('notes helpers', () => {
   })
 
   it('listNotes filters only .md URLs from the container', async () => {
-    const { getContainedResourceUrlAll } = await import('@inrupt/solid-client')
+    const { getContainedResourceUrlAll } = await import('@inrupt/solid-client/resource/solidDataset')
     const { listNotes } = await import('../pod/notes.js')
 
     getContainedResourceUrlAll.mockReturnValueOnce([

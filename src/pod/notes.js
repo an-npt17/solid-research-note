@@ -1,11 +1,13 @@
 import {
   getSolidDataset,
   getContainedResourceUrlAll,
+  createContainerAt,
+} from '@inrupt/solid-client/resource/solidDataset'
+import {
   getFile,
   overwriteFile,
   deleteFile,
-  createContainerAt,
-} from '@inrupt/solid-client'
+} from '@inrupt/solid-client/resource/file'
 import { getDefaultSession } from '@inrupt/solid-client-authn-browser'
 
 /**
