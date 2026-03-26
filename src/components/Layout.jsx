@@ -1,15 +1,13 @@
-import React from 'react'
-import { useAuth } from '../auth/AuthContext.jsx'
-import { logoutSession } from '../auth/session.js'
+import React from "react";
+import { useAuth } from "../auth/AuthContext.jsx";
+import { logoutSession } from "../auth/session.js";
 
 export default function Layout({ children }) {
-  const { webId } = useAuth()
+  const { webId } = useAuth();
 
   // Show a short display name derived from the WebID
   // e.g. "https://alice.solidcommunity.net/profile/card#me" → "alice"
-  const displayName = webId
-    ? new URL(webId).hostname.split('.')[0]
-    : ''
+  const displayName = webId ? new URL(webId).hostname.split(".")[0] : "";
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -29,5 +27,5 @@ export default function Layout({ children }) {
       </header>
       <main className="max-w-4xl mx-auto px-4 py-8">{children}</main>
     </div>
-  )
+  );
 }

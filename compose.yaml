@@ -24,6 +24,7 @@ services:
       - "3000:3000"
     command:
       - "--port=3000"
+      - "--baseUrl=${CSS_BASE_URL:-http://localhost:3000}"
       - "--config=@css:config/default.json"
       - "--showStackTrace"
     volumes:
@@ -33,7 +34,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "wget -q --spider http://localhost:3000/.well-known/openid-configuration || exit 1",
+          "wget -q --spider https://nixos.tailfe5885.ts.net/.well-known/openid-configuration || exit 1",
         ]
       interval: 5s
       timeout: 5s

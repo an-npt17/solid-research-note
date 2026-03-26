@@ -3,7 +3,7 @@ import {
   handleIncomingRedirect,
   login,
   logout,
-} from '@inrupt/solid-client-authn-browser'
+} from "@inrupt/solid-client-authn-browser";
 
 /**
  * Must be called once at app startup.
@@ -11,7 +11,7 @@ import {
  * restorePreviousSession: true means login survives page refresh.
  */
 export async function initSession() {
-  await handleIncomingRedirect({ restorePreviousSession: true })
+  await handleIncomingRedirect({ restorePreviousSession: true });
 }
 
 /**
@@ -22,22 +22,22 @@ export async function loginWithProvider(oidcIssuer) {
   await login({
     oidcIssuer,
     redirectUrl: window.location.origin + window.location.pathname,
-    clientName: 'Solid Research Notes',
-  })
+    clientName: "Solid Research Notes",
+  });
 }
 
 export async function logoutSession() {
-  await logout()
+  await logout();
 }
 
 /** Returns the logged-in user's WebID string, or undefined. */
 export function getWebId() {
-  return getDefaultSession().info.webId
+  return getDefaultSession().info.webId;
 }
 
 /** Returns true if a session is active. */
 export function isLoggedIn() {
-  return getDefaultSession().info.isLoggedIn
+  return getDefaultSession().info.isLoggedIn;
 }
 
 /**
@@ -45,7 +45,7 @@ export function isLoggedIn() {
  * Inrupt fires 'login' and 'logout' events on the session object.
  */
 export function onSessionChange(callback) {
-  const session = getDefaultSession()
-  session.events.on('login', callback)
-  session.events.on('logout', callback)
+  const session = getDefaultSession();
+  session.events.on("login", callback);
+  session.events.on("logout", callback);
 }
