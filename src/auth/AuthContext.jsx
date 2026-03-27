@@ -16,6 +16,13 @@ export function AuthProvider({ children }) {
 	});
 
 	useEffect(() => {
+		// Public viewer route doesn't need auth — skip OIDC init to prevent redirect
+		const isViewerRoute = window.location.pathname.endsWith('/viewer')
+		if (isViewerRoute) {
+			setSessionState({ webId: undefined, loggedIn: false, loading: false })
+			return
+		}
+
 		// Handle the OIDC redirect on first load, then read session state
 		initSession().then(() => {
 			setSessionState({

@@ -4,6 +4,11 @@ import LoginPage from './components/LoginPage.jsx'
 import Layout from './components/Layout.jsx'
 import NoteList from './components/NoteList.jsx'
 import ReactMarkdown from 'react-markdown'
+import { slugify } from './pod/notes.js'
+
+function processWikiLinks(text) {
+  return text.replace(/\[\[([^\]]+)\]\]/g, (_, t) => `[${t}](#wiki:${encodeURIComponent(t)})`)
+}
 
 // Catches any React render error and shows it instead of a blank page
 class ErrorBoundary extends Component {
@@ -35,6 +40,13 @@ function PublicNoteViewer({ noteUrl }) {
   const [content, setContent] = useState(null)
   const [error, setError] = useState(null)
 
+  const containerUrl = noteUrl.substring(0, noteUrl.lastIndexOf('/') + 1)
+
+  function wikiHref(title) {
+    const noteFile = containerUrl + slugify(title) + '.md'
+    return window.location.origin + window.location.pathname + '?url=' + noteFile
+  }
+
   useEffect(() => {
     fetch(noteUrl)
       .then((r) => {
@@ -55,7 +67,23 @@ function PublicNoteViewer({ noteUrl }) {
         )}
         {content && (
           <div className="bg-white rounded-2xl shadow p-8 prose prose-slate max-w-none">
-            <ReactMarkdown>{content}</ReactMarkdown>
+            <ReactMarkdown
+              components={{
+                a({ href, children }) {
+                  if (href?.startsWith('#wiki:')) {
+                    const title = decodeURIComponent(href.slice(6))
+                    return (
+                      <a href={wikiHref(title)} className="text-indigo-600 hover:text-indigo-800">
+                        {children}
+                      </a>
+                    )
+                  }
+                  return <a href={href} target="_blank" rel="noreferrer">{children}</a>
+                },
+              }}
+            >
+              {processWikiLinks(content)}
+            </ReactMarkdown>
           </div>
         )}
         {!content && !error && (
@@ -80,9 +108,10 @@ function AppInner() {
 
   const { loading, loggedIn } = auth
 
-  // Check for ?view= query param (public note viewer, no auth needed)
+  // Check for /viewer?url= route (public note viewer, no auth needed)
+  const isViewerRoute = window.location.pathname.endsWith('/viewer')
   const params = new URLSearchParams(window.location.search)
-  const viewUrl = params.get('view')
+  const viewUrl = isViewerRoute ? params.get('url') : null
 
   if (viewUrl) {
     return <PublicNoteViewer noteUrl={viewUrl} />

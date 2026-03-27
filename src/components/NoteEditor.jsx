@@ -4,6 +4,7 @@ export default function NoteEditor({ initial, onSave, onCancel }) {
   // initial: { title, content } for edits, or null for new notes
   const [title, setTitle] = useState(initial?.title ?? '')
   const [content, setContent] = useState(initial?.content ?? '')
+  const [isPublic, setIsPublic] = useState(true)
   const [saving, setSaving] = useState(false)
   const isEdit = !!initial
 
@@ -11,7 +12,7 @@ export default function NoteEditor({ initial, onSave, onCancel }) {
     e.preventDefault()
     setSaving(true)
     try {
-      await onSave(title, content)
+      await onSave(title, content, isPublic)
     } finally {
       setSaving(false)
     }
@@ -60,9 +61,38 @@ export default function NoteEditor({ initial, onSave, onCancel }) {
               onChange={(e) => setContent(e.target.value)}
               rows={14}
               className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder={'# Introduction\n\nWrite your notes here...'}
+              placeholder={'# Introduction\n\nWrite your notes here...\n\nLink to another note with [[Note Title]]'}
             />
+            <p className="text-xs text-slate-400 mt-1">
+              Use <code className="bg-slate-100 px-1 rounded">[[Note Title]]</code> to link between notes.
+            </p>
           </div>
+          {!isEdit && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-slate-700">Visibility</span>
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="radio"
+                  name="visibility"
+                  checked={isPublic}
+                  onChange={() => setIsPublic(true)}
+                  className="accent-emerald-600"
+                />
+                <span className="text-sm text-slate-600">Public</span>
+              </label>
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="radio"
+                  name="visibility"
+                  checked={!isPublic}
+                  onChange={() => setIsPublic(false)}
+                  className="accent-slate-500"
+                />
+                <span className="text-sm text-slate-600">Private</span>
+              </label>
+            </div>
+          )}
+
           <div className="flex justify-end gap-3">
             <button
               type="button"

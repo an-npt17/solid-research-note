@@ -9,6 +9,12 @@ import {
   deleteFile,
 } from '@inrupt/solid-client/resource/file'
 import { getDefaultSession } from '@inrupt/solid-client-authn-browser'
+import {
+  writeTurtleSidecar,
+  deleteTtlSidecar,
+  readTurtleSidecar,
+  parseMentions,
+} from './rdf.js'
 
 /**
  * Given a WebID like "https://alice.solidcommunity.net/profile/card#me",
@@ -74,6 +80,7 @@ export async function getNote(noteUrl) {
 
 /**
  * Save (create or overwrite) a note.
+ * Also writes a .ttl sidecar with title, timestamps, and [[wiki-link]] triples.
  * @param {string} webId - the logged-in user's WebID
  * @param {string} title - human-readable title (becomes filename)
  * @param {string} content - Markdown text
@@ -84,18 +91,34 @@ export async function saveNote(webId, title, content) {
   const containerUrl = getContainerUrl(webId)
   const noteUrl = `${containerUrl}${slugify(title)}.md`
 
+  // Preserve created date if sidecar already exists
+  const existing = await readTurtleSidecar(noteUrl)
+  const created = existing?.created ?? undefined
+
+  // Resolve [[Title]] mentions to absolute note URLs
+  const mentionTitles = parseMentions(content)
+  const mentionUrls = mentionTitles.map((t) => `${containerUrl}${slugify(t)}.md`)
+
   await overwriteFile(noteUrl, new Blob([content], { type: 'text/markdown' }), {
     contentType: 'text/markdown',
     fetch,
   })
 
+  await writeTurtleSidecar(noteUrl, { title, mentionUrls, created })
+
   return noteUrl
 }
 
 /**
- * Delete a note by URL.
+ * Delete a note, its .ttl sidecar, and its .acl file.
  */
 export async function deleteNote(noteUrl) {
   const { fetch } = getSession()
   await deleteFile(noteUrl, { fetch })
+  await deleteTtlSidecar(noteUrl)
+  try {
+    await deleteFile(noteUrl + '.acl', { fetch })
+  } catch {
+    // ACL may not exist (e.g. note had no explicit ACL) — ignore
+  }
 }

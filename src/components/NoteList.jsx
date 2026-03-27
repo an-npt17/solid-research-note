@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { useAuth } from '../auth/AuthContext.jsx'
 import { listNotes, getNote, saveNote, deleteNote } from '../pod/notes.js'
+import { makeNotePublic, revokeNotePublic } from '../pod/acl.js'
 import NoteEditor from './NoteEditor.jsx'
 import NoteViewer from './NoteViewer.jsx'
 
@@ -34,8 +35,21 @@ export default function NoteList() {
     setEditContent(null)
   }
 
-  async function handleSave(title, content) {
-    await saveNote(webId, title, content)
+  async function handleOpenNoteByName(name) {
+    const note = notes.find((n) => n.name.toLowerCase() === name.toLowerCase())
+    if (note) await handleOpenNote(note)
+  }
+
+  async function handleSave(title, content, isPublic) {
+    const noteUrl = await saveNote(webId, title, content)
+    if (active === 'create') {
+      // Always set an explicit ACL so the note doesn't inherit the container's ACL
+      if (isPublic) {
+        await makeNotePublic(noteUrl)
+      } else {
+        await revokeNotePublic(noteUrl)
+      }
+    }
     setActive(null)
     setEditContent(null)
     await loadNotes()
@@ -132,6 +146,8 @@ export default function NoteList() {
           content={active.content}
           onClose={() => setActive(null)}
           onEdit={handleEditFromViewer}
+          notes={notes}
+          onOpenNoteByName={handleOpenNoteByName}
         />
       )}
     </>
